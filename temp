@@ -1,0 +1,21 @@
+USER
+{
+    ID,
+    Created_At
+    Updated_At
+    Name
+    Email
+}
+
+ShortUrl
+{
+    ID
+    OrignalUrlID
+    ShortenedUrl
+    UserID
+}
+
+""
+
+select * from shortURl 
+where UserID = 1 and OrignalUrlID = "sdnjkndkfj"
