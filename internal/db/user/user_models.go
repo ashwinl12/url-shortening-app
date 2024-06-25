@@ -9,8 +9,9 @@ import (
 const UserTName = "users"
 
 type User struct {
-	ID      primitive.ObjectID `bson:"id" validate:"required"`
-	Name    string             `bson:"name" validate:"required"`
-	Email   string             `bson:"email" validate:"required,email"`
-	Country string             `bson:"country" validate:"required"`
+	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Name    string             `json:"name" bson:"name" validate:"required,min=3,max=32"`
+	Email   string             `json:"email" bson:"email" validate:"required,email"`
+	Age     int                `json:"age" bson:"age" validate:"gte=18,lte=100"`
+	Country string             `json:"country" bson:"country" validate:"required"`
 }

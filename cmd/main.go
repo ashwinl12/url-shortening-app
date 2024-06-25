@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"context"
+
 	"go-url-shortner/config"
 	internalPkg "go-url-shortner/internal"
 	"go-url-shortner/internal/server/url"
@@ -12,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/go-playground/validator/v10"
 
 	// "github.com/golang-migrate/migrate/v4"
 	// "github.com/golang-migrate/migrate/v4/database/mongodb"
@@ -22,20 +25,23 @@ func main() {
 	fmt.Println("Hello from main")
 
 	// Parse flags received through CLI
-	newCnfg, err := config.ParseFlags()
-	if err != nil {
-		logger.LogError(err, "error inside main.go: ParseFlags", nil)
-		return
-	}
+	// newCnfg, err := config.ParseFlags()
+	// if err != nil {
+	// 	logger.LogError(err, "error inside main.go: ParseFlags", nil)
+	// 	return
+	// }
+
+	// create a new validator object
+	validate := validator.New()
 
 	// Make a DB connection to MongoDB
 	client, ctx, cancel, err := config.ConnectToDB(log.Logger)
 	if err != nil {
-		log.LogFatal(err, "error inside main.go: error while connecting to DB", nil)
+		logger.LogFatal(err, "error inside main.go: error while connecting to DB", nil)
 		return
 	}
-	fmt.Println("Db Name: ", *(newCnfg.DB.DbName))
-	db := client.Database(*newCnfg.DB.DbName)
+	//fmt.Println("Db Name: ", *(newCnfg.DB.DbName))
+	db := client.Database("tiny_url_db")
 
 	defer cancel()
 	defer client.Disconnect(ctx)
@@ -76,7 +82,7 @@ func main() {
 	server := gin.Default()
 
 	// Initialize handlers
-	InitializeHandlers(log.Logger, db)
+	InitializeHandlers(log.Logger, db, &ctx, validate)
 
 	// Load routes
 	internalPkg.LoadRoutes(server)
@@ -84,7 +90,7 @@ func main() {
 	server.Run()
 }
 
-func InitializeHandlers(logger *logrus.Logger, db *mongo.Database) {
-	internalPkg.Usrh = user.NewUserSrvPkg(logger, db)
-	internalPkg.Urlh = url.NewUrlSrvPkg(logger, db)
+func InitializeHandlers(logger *logrus.Logger, db *mongo.Database, ctx *context.Context, validate *validator.Validate) {
+	internalPkg.Usrh = user.NewUserSrvPkg(logger, db, ctx, validate)
+	internalPkg.Urlh = url.NewUrlSrvPkg(logger, db, ctx)
 }
